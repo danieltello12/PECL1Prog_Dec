@@ -55,24 +55,39 @@ abstract class ArbolHuffman {
     /*
     No esta terminada, no funciona bien
      */
-    def codificaraux(Nodo: ArbolHuffman, characteres: List[Char],bits: List[Bit]): (List[Bit], List[Char]) = {
+
+    def codificaraux(Nodo: ArbolHuffman, characteres: List[Char],bits: List[Bit]): List[Bit] = {
       Nodo match
-        case HojaHuffman(peso, caracter) =>if caracter == characteres.head then (bits, characteres) else (Nil,Nil)
+        //En el caso que sea Hoja veo si el carácter coincide con el carácter de nuestra lista y devolvemos los bits en ese caso
+        case HojaHuffman(peso, caracter) =>if caracter == characteres.head then bits else Nil
+        //En el caso que sea Rama vamos primero por la izquierda. En el caso que fuésemos bien nos devolvería los bits del caso base
+        //Si no resultadoIzquierda permanece vacío y habría que ir por la derecha
 
-        case RamaHuffman(izquierda, derecha) => {
-          codificaraux(izquierda, characteres,1::bits) match
-            case (codigo, caracteres) => return (1 :: bits, caracteres)
-          codificaraux(derecha, characteres,0::bits) match
-            case (codigo, caracteres) => (0 :: bits, caracteres)
-        }
+        case RamaHuffman(izquierda,derecha) =>
+
+          val resultadoIzq=codificaraux(izquierda, characteres, bits:+1)
+          if resultadoIzq.nonEmpty then resultadoIzq
+            //Tenemos que ir por la derecha entonces
+          else{
+
+          val resultadoDer = codificaraux(derecha, characteres,bits:+0)
+          resultadoDer
+          }
+
+
+
     }
-
+    //Pasamos la cadena a una lista
     var caracteres = cadena.toList
+    //Definimos una lista para ir metiendo los bits correspondientes a la cadena
     var bitList: List[Bit] = List()
+    //Mientras que la cadena metida no sea vacía vamos llamando al auxiliar y quedándonos con la cola de caracteres
+    //De manera que en el caso base del auxiliar vemos si nos coincide el carácter que hay en esa determinada posición
+    //De la cadena con la HojaHuffman
     while (caracteres.nonEmpty) {
-      var (bits, characteres) = codificaraux(arbol, caracteres, List())
+      var bits = codificaraux(arbol, caracteres, List())
       caracteres=caracteres.tail
-      bits=bits.reverse
+      //Vamos almacenando los bits
       bitList=bitList:::bits
 
     }
@@ -111,12 +126,12 @@ def caracteres(arbol: ArbolHuffman): List[Char] = arbol match {
 
 object Codificación {
   def main(args: Array[String]): Unit = {
-    val arbol = RamaHuffman(HojaHuffman(4, 'S'), RamaHuffman(HojaHuffman(3, 'O'), RamaHuffman(HojaHuffman(2, 'E'), HojaHuffman(2, ' '))))
+    val arbol = RamaHuffman(HojaHuffman(4, 'S'), RamaHuffman(HojaHuffman(3, 'O'), RamaHuffman(HojaHuffman(2, 'S'), HojaHuffman(2, ' '))))
     val mensaje: List[Bit] = List(0,1,0,0,1,1,1,1,1,0,0,1,1,0,1,1,1,1,0,0,1,0)
 
-    println(s"Peso del árbol: ${peso(arbol)}")
-    println(s"Caracteres en el árbol: ${caracteres(arbol)}")
-    println(s"Decodificación en el árbol: ${arbol.decodificar(arbol, mensaje)}")
-    println(s"Codificacion en el arbol: ${arbol.codificar(arbol)("SOS ESE OSO")}")
+    println("Peso del árbol: ${peso(arbol)}")
+    println("Caracteres en el árbol: ${caracteres(arbol)}")
+    println("Codificación en el árbol: " + arbol.codificar(arbol)("SOS "))
   }
 }
+
