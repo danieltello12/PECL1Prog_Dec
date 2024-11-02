@@ -50,6 +50,34 @@ abstract class ArbolHuffman {
     resultado.toString() //Paso el String Builder a formato String
   }
 
+  def codificar(arbol: ArbolHuffman)(cadena: String): String =
+
+    /*
+    No esta terminada, no funciona bien
+     */
+    def codificaraux(Nodo: ArbolHuffman, characteres: List[Char],bits: List[Bit]): (List[Bit], List[Char]) = {
+      Nodo match
+        case HojaHuffman(peso, caracter) =>if caracter == characteres.head then (bits, characteres) else (Nil,Nil)
+
+        case RamaHuffman(izquierda, derecha) => {
+          codificaraux(izquierda, characteres,1::bits) match
+            case (codigo, caracteres) => return (1 :: bits, caracteres)
+          codificaraux(derecha, characteres,0::bits) match
+            case (codigo, caracteres) => (0 :: bits, caracteres)
+        }
+    }
+
+    var caracteres = cadena.toList
+    var bitList: List[Bit] = List()
+    while (caracteres.nonEmpty) {
+      var (bits, characteres) = codificaraux(arbol, caracteres, List())
+      caracteres=caracteres.tail
+      bits=bits.reverse
+      bitList=bitList:::bits
+
+    }
+    bitList.toString()
+
 }
 
 //CLASE CASO RAMA HUFFMAN QUE HEREDA DE ARBOLHUFFMAN
@@ -89,5 +117,6 @@ object Codificación {
     println(s"Peso del árbol: ${peso(arbol)}")
     println(s"Caracteres en el árbol: ${caracteres(arbol)}")
     println(s"Decodificación en el árbol: ${arbol.decodificar(arbol, mensaje)}")
+    println(s"Codificacion en el arbol: ${arbol.codificar(arbol)("SOS ESE OSO")}")
   }
 }
