@@ -5,7 +5,7 @@ abstract class ArbolHuffman {
 
     def decodificarAux(nodo: ArbolHuffman, bits: List[Bit]): (String, List[Bit]) = {
       nodo match {
-      case HojaHuffman (peso, caracter) => (caracter.toString, bits)
+      case HojaHuffman (_, caracter) => (caracter.toString, bits)
           /*
           En caso de que el nodo introducido sea de tipo Hoja
           devolvere el caracter en formato string y los bits
@@ -51,11 +51,6 @@ abstract class ArbolHuffman {
   }
 
   def codificar(arbol: ArbolHuffman)(cadena: String): String =
-
-    /*
-    No esta terminada, no funciona bien
-     */
-
     def codificaraux(Nodo: ArbolHuffman, characteres: List[Char],bits: List[Bit]): List[Bit] = {
       Nodo match
         //En el caso que sea Hoja veo si el carácter coincide con el carácter de nuestra lista y devolvemos los bits en ese caso
@@ -65,12 +60,12 @@ abstract class ArbolHuffman {
 
         case RamaHuffman(izquierda,derecha) =>
 
-          val resultadoIzq=codificaraux(izquierda, characteres, bits:+1)
+          val resultadoIzq=codificaraux(izquierda, characteres, bits:+0)
           if resultadoIzq.nonEmpty then resultadoIzq
             //Tenemos que ir por la derecha entonces
           else{
 
-          val resultadoDer = codificaraux(derecha, characteres,bits:+0)
+          val resultadoDer = codificaraux(derecha, characteres,bits:+1)
           resultadoDer
           }
 
@@ -123,15 +118,59 @@ def caracteres(arbol: ArbolHuffman): List[Char] = arbol match {
     //Si es una rama concateno en lista los caracteres de la izquierda y los de la derecha
     caracteres(izq) ++ caracteres(dch)
 }
+def ListaCharsADistFrec(listaChar: List[Char]): List[(Char, Int)] ={
+  /*
+  Creo una función auxiliar que mediante la función count
+  me va a contar en la lista caracteres cuantas veces aparece el caracter que le indique
+   */
+  def auxListChar(caracteres: List[Char], caracter:Char):Int={
+    caracteres.count(_==caracter)
+  }
+
+  val caracteres= listaChar.distinct //Creo una variable para almacenar todos los caracteres distintos que hay
+  val listatuplas: List[(Char,Int)]=caracteres.map(char=>(char,auxListChar(listaChar,char)))
+  /*Hago  la lista de tuplas utilizando el mapeado pasando cada caracter a el caracter y al lado
+   su frecuencia mediante la funcion auxiliar
+   */
+  listatuplas //Devuelvo listatuplas
+}
+// Convierte la distribución en una lista de hojas ordenada
+def DistribFrecAListaHojas(frecuencias: List[(Char,Int)]): List[HojaHuffman] ={
+  /*
+      Creo una función auxiliar para recorrer la lista de tuplas y segundo la recorro
+      creo la hoja y la añado a la lista de hojas
+   */
+  def auxHojas(frecuencias: List[(Char,Int)], hojas: List[HojaHuffman]):List[HojaHuffman]={
+    frecuencias match
+      case Nil=> hojas // Si la lista de frecuencias es vacia devuelvo ya las hojas
+      case cabeza::cola=> val nuevaHoja: HojaHuffman=HojaHuffman(cabeza._2,cabeza._1)
+                            auxHojas(cola, hojas.appended(nuevaHoja))
+                            /*
+                            En caso de que tenga cabeza y cola creo una hoja con los valores correspondientes
+                            de la tupla y llamo de nuevo a la funcion auxiliar conla cola y la lista de hojas con
+                            la nueva hoja
+                             */
+  }
+  auxHojas(frecuencias.sortBy(_._2),List())
+  /*
+  Llamo a la función auxiliar con la lista de tuplas  ordenadas por el segundo parametro,
+  es decir por la frecuencia
+   */
+}
 
 object Codificación {
   def main(args: Array[String]): Unit = {
-    val arbol = RamaHuffman(HojaHuffman(4, 'S'), RamaHuffman(HojaHuffman(3, 'O'), RamaHuffman(HojaHuffman(2, 'S'), HojaHuffman(2, ' '))))
+    val arbol = RamaHuffman(HojaHuffman(4, 'S'), RamaHuffman(HojaHuffman(3, 'O'), RamaHuffman(HojaHuffman(2, 'E'), HojaHuffman(2, ' '))))
     val mensaje: List[Bit] = List(0,1,0,0,1,1,1,1,1,0,0,1,1,0,1,1,1,1,0,0,1,0)
+    val prueba: String= "holaaa buenss"
 
-    println("Peso del árbol: ${peso(arbol)}")
-    println("Caracteres en el árbol: ${caracteres(arbol)}")
-    println("Codificación en el árbol: " + arbol.codificar(arbol)("SOS "))
+    println(s"Peso del árbol: ${peso(arbol)}")
+    println(s"Caracteres en el árbol: ${caracteres(arbol)}")
+    println(s"Decodificación en arbol: ${arbol.decodificar(arbol,mensaje)}")
+    println("Codificación en el árbol: " + arbol.codificar(arbol)("SOS ESE OSO"))
+    println("Frecuencias: "+ListaCharsADistFrec(prueba.toList).sortBy(_._2).toString())
+    println("Hojas: "+DistribFrecAListaHojas(ListaCharsADistFrec(prueba.toList)).toString())
+
   }
 }
 
