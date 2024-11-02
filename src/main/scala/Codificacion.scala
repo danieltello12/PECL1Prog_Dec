@@ -65,12 +65,12 @@ abstract class ArbolHuffman {
 
         case RamaHuffman(izquierda,derecha) =>
 
-          val resultadoIzq=codificaraux(izquierda, characteres, bits:+1)
+          val resultadoIzq=codificaraux(izquierda, characteres, bits:+0)
           if resultadoIzq.nonEmpty then resultadoIzq
             //Tenemos que ir por la derecha entonces
           else{
 
-          val resultadoDer = codificaraux(derecha, characteres,bits:+0)
+          val resultadoDer = codificaraux(derecha, characteres,bits:+1)
           resultadoDer
           }
 
