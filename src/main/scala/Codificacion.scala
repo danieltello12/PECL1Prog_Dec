@@ -170,7 +170,6 @@ object Codificación {
     println("Codificación en el árbol: " + arbol.codificar(arbol)("SOS ESE OSO"))
     println("Frecuencias: "+ListaCharsADistFrec(prueba.toList).sortBy(_._2).toString())
     println("Hojas: "+DistribFrecAListaHojas(ListaCharsADistFrec(prueba.toList)).toString())
-
   }
 }
 
