@@ -1,6 +1,7 @@
 type Bit = 0 | 1
 
 abstract class ArbolHuffman {
+
   def decodificar(nodo: ArbolHuffman, cadenaCodificada: List[Bit]): String = {
 
     def decodificarAux(nodo: ArbolHuffman, bits: List[Bit]): (String, List[Bit]) = {
@@ -105,7 +106,7 @@ def peso(arbol: ArbolHuffman): Int = arbol match {
   p
 
   case RamaHuffman(izq, dch) =>
-    //Si es una rama devuelvoel peso de la izquierda+ derecha
+    //Si es una rama devuelvo el peso de la izquierda+ derecha
     peso(izq) + peso(dch)
 }
 
@@ -157,6 +158,76 @@ def DistribFrecAListaHojas(frecuencias: List[(Char,Int)]): List[HojaHuffman] ={
   es decir por la frecuencia
    */
 }
+// Crea un objeto RamaHuff integrando los dos ArbolHuff (izquierdo y
+// derecho)que se le pasan como parámetros
+def creaRamaHuff(izq: ArbolHuffman, dch: ArbolHuffman):RamaHuffman =
+  val rama:RamaHuffman= RamaHuffman(izq,dch)
+  rama
+
+def combinar(nodos: List[ArbolHuffman]): List[ArbolHuffman] = {
+  def combinarAux(nodos: List[ArbolHuffman]): List[ArbolHuffman] = nodos match {
+    //Si solo tiene un elemento me quedo con él
+    case List(nodo) => List(nodo)
+    case cabeza :: cola =>
+      val (primerosDos, resto) = nodos.splitAt(2)
+
+      val List(izq, dch) = primerosDos // Extraemos los dos primeros nodos
+
+      //Utilizamos función hecha anteriormente
+      val nuevaRama = creaRamaHuff(izq, dch)
+
+
+      val nuevaLista = (nuevaRama :: resto)
+      val pesoRama = peso(nuevaRama)
+      //Aplico inserción para comparar los pesos de la rama general con el peso de la hoja.
+      def insertar(nuevaRama: ArbolHuffman, ordenada: List[ArbolHuffman]): List[ArbolHuffman] = ordenada match {
+
+        case Nil => List(nuevaRama)
+        case h :: t => if (peso(nuevaRama) <= peso(h)) nuevaRama :: ordenada else h :: insertar(nuevaRama, t)
+      }
+
+      def ordenar(noOrdenada: List[ArbolHuffman], ordenada: List[ArbolHuffman]): List[ArbolHuffman] = noOrdenada match {
+        case Nil => ordenada
+        case h :: t => ordenar(t, insertar(h, ordenada))
+
+
+      }
+
+      ordenar(nuevaLista, Nil)
+
+
+  }
+
+  combinarAux(nodos)
+
+}
+
+  def esListaSingleton(lista: List[ArbolHuffman]): Boolean = lista match{
+    case List(_)=>true //Tenga un solo elemento
+    case _=>false //En otro caso
+  }
+
+def repetirHasta(combinar: List[ArbolHuffman] => List[ArbolHuffman], esListaSingleton: List[ArbolHuffman] => Boolean)(listaHojas: List[ArbolHuffman]): List[ArbolHuffman] =
+  def auxiliar(nodos: List[ArbolHuffman]):List[ArbolHuffman]=
+      if esListaSingleton(nodos) then nodos //Solo tiene un elemento por lo que devuelvo nodos
+        //Si no llamo a auxiliar combinando los nodos quedándote cada vez con menos y finalmente el booleano se pondrá a true
+        //Y devolverá la lista con todos los elementos del árbol
+      else auxiliar(combinar(nodos))
+
+  auxiliar(listaHojas)
+
+def crearArbolHuffman(cadena: String): ArbolHuffman =
+  //Aplico todas las funciones
+  val tupla=ListaCharsADistFrec(cadena.toList)
+  val ordenada=DistribFrecAListaHojas(tupla)
+  val resultado=repetirHasta(combinar,esListaSingleton)(ordenada)
+  //Como se reduce a un solo nodo combinando devolvemos la cabeza
+  resultado.head
+
+
+
+
+
 
 object Codificación {
   def main(args: Array[String]): Unit = {
@@ -170,6 +241,8 @@ object Codificación {
     println("Codificación en el árbol: " + arbol.codificar(arbol)("SOS ESE OSO"))
     println("Frecuencias: "+ListaCharsADistFrec(prueba.toList).sortBy(_._2).toString())
     println("Hojas: "+DistribFrecAListaHojas(ListaCharsADistFrec(prueba.toList)).toString())
+    val arbol2=crearArbolHuffman("jeierrw")
+    println("siu")
   }
 }
 
