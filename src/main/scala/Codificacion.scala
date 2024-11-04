@@ -215,7 +215,6 @@ def repetirHasta(combinar: List[ArbolHuffman] => List[ArbolHuffman], esListaSing
       else auxiliar(combinar(nodos))
 
   auxiliar(listaHojas)
-
 def crearArbolHuffman(cadena: String): ArbolHuffman =
   //Aplico todas las funciones
   val tupla=ListaCharsADistFrec(cadena.toList)
@@ -223,9 +222,152 @@ def crearArbolHuffman(cadena: String): ArbolHuffman =
   val resultado=repetirHasta(combinar,esListaSingleton)(ordenada)
   //Como se reduce a un solo nodo combinando devolvemos la cabeza
   resultado.head
+object  ArbolHuffman {
+  def apply(cadena: String): ArbolHuffman = crearArbolHuffman(cadena)
+
+}
+type TablaCodigos = List[(Char, List[Bit])] //Creo el tipo de Dato TablaCodigos
+def deArbolATabla(arbol: ArbolHuffman): TablaCodigos = {
+  /*
+    Utiliza una función auxiliar para recorrer el arbol
+   */
+  def auxArbolTabla(Nodo: ArbolHuffman, bits: List[Bit], hojaHuffman: HojaHuffman): (Char, List[Bit]) = {
+    Nodo match //Comparo el Nodo en el que me encuentro
+      case HojaHuffman(_, caracter) => { //Si estoyen una hoja guardo el caracter
+        if hojaHuffman.caracter == caracter then (caracter, bits)
+          /*
+          Si la hoja en la que me encuentro es la hoja que estoy buscando (las comparo por los caracteres)
+          devuelvo una tupla con el caracter de la hoja y la lista de bits del camino hasta la hoja
+           */
+        else (caracter, Nil) //Si no es la hoja q busco devuelvo Nil en la lista de bits del camino hacia la hoja
+      }
+      case RamaHuffman(izquierda, derecha) => //Caso rama con izquierda y derecah
+        val resultadoIzq = auxArbolTabla(izquierda, bits :+ 0, hojaHuffman)
+        /*
+          Creo una valor que va a ser el resultado de la izquierda que se metera po la rama de la izquierda
+        hasta llegar a una hoja
+
+        A la cadena de bits le añado un 0 para indicar que se ha metido por la izquierda
+         */
+        if resultadoIzq._2.nonEmpty then resultadoIzq
+          /*
+          Si el valor 2 de la tupla no esta vacio, es decir ha llegado a la hoja y era esa hoja la que estabaos buscando
+          devuevo la tupla
+           */
+        else //Si por la izquierda esta vacia quiere decir que a la izquierda no esta la hoja, luego vamos a la derecha
+          val resultadoDer = auxArbolTabla(derecha, bits :+ 1, hojaHuffman)
+          /*
+          Creo una valor que va a ser el resultado de la derecha que se metera por la rama de la derecha
+                  hasta llegar a una hoja
+
+          A la cadena de bits le añado un 1 para indicar que se ha metido por la derecha
+           */
+
+          resultadoDer //Devuelvo el resultado de la derecha
 
 
+  }
 
+  var tabla: TablaCodigos = List() //Creo una variable tabla para ir añadiendo los resultados
+
+  //Creo una variable con una lista de las hojas que hay dentro del arbol
+  var listaHojas: List[HojaHuffman] = DistribFrecAListaHojas(ListaCharsADistFrec(caracteres(arbol)))
+  while (listaHojas.nonEmpty) { //Hago un while hasta que no queden más hojas por buscar
+    val (caracter, codigo) = auxArbolTabla(arbol, List(), listaHojas.head)
+    tabla = tabla.appended(caracter, codigo) //Añado a la tabla la tupla resultante
+    listaHojas = listaHojas.tail //Quito de la lista de hojas la hoja que he encontrado
+  }
+  tabla //Devuelvo la tabla
+}
+def codificar(arbol: TablaCodigos)(cadena: String): List[Bit]={
+  def codificaraux(arbol: TablaCodigos,caracteres: List[Char]):List[Bit]={ //Creo función auxiliar para recorrer la tabla
+    caracteres match //Comparo los caracteres
+      case Nil => Nil
+
+      case cabeza::cola=>//En el caso de que tenga cabeza y cola los caracteres
+        if(arbol.head._1==cabeza) then arbol.head._2
+          /*
+          Si el primer elemento de la tabla tiene el mismo caracter que el primer elemento de la cadena
+          devuelvo el codigo de dicho caracter
+           */
+        else codificaraux(arbol.tail,caracteres)
+        /*
+        En caso contrario llamo de nuevo a la función auxiliar con el resto de elementos de la tabla
+        y los caracteres
+         */
+  }
+  var caracteres= cadena.toList //Creo la cadena de caracteres
+  var codigo: List[Bit]= List() //Creo una lista vacia donde guardar el codigo final
+  while (caracteres.nonEmpty){
+    codigo=codigo++codificaraux(arbol,caracteres) //Añado a la lista del codigo el codigo que me devuelve la funcion
+    caracteres=caracteres.tail //Quito el primer elemento de los caracteres
+  }
+codigo //Devuelvo el código
+}
+
+def decodificar(tabla: TablaCodigos)(cadena: List[Bit]): String={
+  //Función auxiliar para recorrer la tabla en busca de el caracter que coincida con el codiog que se recibe
+  def auxiliarDecod(tabla: TablaCodigos, cadena: List[Bit]): Option[Char]={
+    tabla match
+      case Nil => None
+      case cabeza::cola => //Si la tabla tiene cabeza y cola
+        /*
+        Si el primer elemento de la tabla tiene el mismo código que el código de bits
+        que se ha pasado por parametro devuelvo el primer valor de la primera tupla, es decir el caracter
+         */
+        if(cabeza._2.equals(cadena)) then Some(cabeza._1)
+          /*
+          Si no llamo de nuevo a la función auxiliar con el resto de elemento de la tabla y con la cadena de bits
+           */
+        else auxiliarDecod(cola,cadena)
+  }
+  val resultado= new StringBuilder() //Creo un valor stringBuilder para guardar el resultado
+  var bits: List[Bit]= List() //Creo una variable para guardar las cadenas de bits que voy a ir buscando
+  bits=bits.appended(cadena.head) //Añado a la lista vacia el primer bit de la cadena
+  var copia=cadena.tail //Creo un valor con una copia de la cadena para ir modificandola segun necesite
+  while (copia.nonEmpty|| bits.nonEmpty) { //Mientras que la copia y la lista de bits no este vacia
+    val caracter = auxiliarDecod(tabla,bits)
+    /*
+    Si el caracter que me devuelve la función es None, significa que no ha encontrado ningún caracter
+    en la tabla con ese codigo de bits luego voy a añadir el siguiente bit de la copia en la cadena de bits
+    que estoy utiliando para buscar los caracteres
+     */
+    if(caracter==None) then {
+      if(copia.nonEmpty) {
+        bits = bits.appended(copia.head)
+        copia = copia.tail
+      }
+      else{
+        bits= bits.empty
+      }
+    }
+    else{
+      caracter match
+        /*
+        Como la funcion me devuelve Optiona[Char] utilizo el match para meter en el stringBuilder
+        solo el caracter y no Some(Char)
+         */
+        case Some(x) => resultado.append(x)
+      if(copia.nonEmpty) then {
+        /*
+        Borro los bits de la lista de bits para buscar ya que he encontrado ya el caracter y pongo
+        en su lugar el siguiente bit de la cadena
+         */
+        bits = List(copia.head)
+        copia = copia.tail
+        //Dejo en la cadena todo menos el bit que acabo de meter en la lista de bits para buscar
+      }else{
+        bits=bits.empty
+        /*
+        Si la copia esta vacia vacio la lista de bits para buscar para poder salir del bucel while
+
+         */
+      }
+    }
+  }
+  resultado.toString()
+
+}
 
 
 
@@ -242,6 +384,11 @@ object Codificación {
     println("Frecuencias: "+ListaCharsADistFrec(prueba.toList).sortBy(_._2).toString())
     println("Hojas: "+DistribFrecAListaHojas(ListaCharsADistFrec(prueba.toList)).toString())
     val arbol2=crearArbolHuffman("jeierrw")
+    val tabla= deArbolATabla(arbol2)
+    val tabla2= deArbolATabla(arbol);
+    println(codificar(tabla2)("SOS ESE OSO").toString())
+    println(arbol.codificar(arbol)("SOS ESE OSO"))
+    println(decodificar(tabla2)(codificar(tabla2)("SOS ESE OSO")))
     println("siu")
   }
 }
