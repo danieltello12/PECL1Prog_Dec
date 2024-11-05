@@ -371,12 +371,10 @@ def decodificar(tabla: TablaCodigos)(cadena: List[Bit]): String={
 
 
 
-object Codificación {
-  def main(args: Array[String]): Unit = {
+object Codificación extends App {
     val arbol = RamaHuffman(HojaHuffman(4, 'S'), RamaHuffman(HojaHuffman(3, 'O'), RamaHuffman(HojaHuffman(2, 'E'), HojaHuffman(2, ' '))))
     val mensaje: List[Bit] = List(0,1,0,0,1,1,1,1,1,0,0,1,1,0,1,1,1,1,0,0,1,0)
     val prueba: String= "holaaa buenss"
-
     println(s"Peso del árbol: ${peso(arbol)}")
     println(s"Caracteres en el árbol: ${caracteres(arbol)}")
     println(s"Decodificación en arbol: ${arbol.decodificar(arbol,mensaje)}")
@@ -389,7 +387,6 @@ object Codificación {
     println(codificar(tabla2)("SOS ESE OSO").toString())
     println(arbol.codificar(arbol)("SOS ESE OSO"))
     println(decodificar(tabla2)(codificar(tabla2)("SOS ESE OSO")))
-    println("siu")
-  }
+
 }
 
